@@ -12,7 +12,7 @@ app.use(express.json());
 
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173"], // Frontend URL
+    origin: ["http://localhost:5173"],
     methods: ["GET", "POST"],
   },
 });
@@ -23,15 +23,25 @@ io.on("connection", (socket) => {
   console.log(`✅ Connected: ${socket.id}`);
 
   socket.on("joinGame", (player) => {
-    players[socket.id] = player;
-    console.log("🎮 Player joined:", player);
-    io.emit("playerJoined", player);
+    const playerWithId = {
+      ...player,
+      id: socket.id,
+      position: player.position || { x: 100, y: 100 },
+    };
+
+    players[socket.id] = playerWithId;
+    console.log("🎮 Player joined:", playerWithId);
+    io.emit("playerJoined", playerWithId);
   });
 
   socket.on("move", ({ id, position }) => {
+    console.log("🚶 Move received:", { id, position }); // Отладка
     if (players[id]) {
       players[id].position = position;
+      console.log("🚶 Updated player position:", players[id]);
       io.emit("playerMoved", { id, position });
+    } else {
+      console.warn("⚠️ Player not found:", id);
     }
   });
 

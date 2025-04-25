@@ -2,6 +2,7 @@ const express = require("express");
 const http = require("http");
 const cors = require("cors");
 const { Server } = require("socket.io");
+const userRouter = require("./routes/userRouter");
 
 const app = express();
 const server = http.createServer(app);
@@ -14,13 +15,15 @@ app.use(express.json());
 // Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173"],  // Change this to your frontend's URL
+    origin: ["http://localhost:5173"], // Change this to your frontend's URL
     methods: ["GET", "POST"],
   },
 });
 
 // Store players in memory
 let players = {};
+
+app.use("/api/v1/", userRouter);
 
 // Handling connections
 io.on("connection", (socket) => {
@@ -34,9 +37,9 @@ io.on("connection", (socket) => {
       position: player.position || { x: 100, y: 100 }, // Default position
     };
 
-    players[socket.id] = playerWithId;  // Save player in players object
+    players[socket.id] = playerWithId; // Save player in players object
     console.log("🎮 Player joined:", playerWithId);
-    
+
     // Notify other players that a new player has joined
     io.emit("playerJoined", playerWithId);
     console.log("📤 Sent playerJoined:", playerWithId); // Debugging output
@@ -45,12 +48,12 @@ io.on("connection", (socket) => {
   // Handle player movement
   socket.on("move", ({ id, position }) => {
     console.log("🚶 Move received:", { id, position });
-    
+
     // Update the position of the player if found
     if (players[id]) {
       players[id].position = position;
       console.log("🚶 Updated player position:", players[id]);
-      
+
       // Notify all players about the updated position
       io.emit("playerMoved", { id, position });
     } else {
@@ -61,8 +64,8 @@ io.on("connection", (socket) => {
   // When a player disconnects
   socket.on("disconnect", () => {
     console.log(`❌ Disconnected: ${socket.id}`);
-    delete players[socket.id];  // Remove the player from the players object
-    
+    delete players[socket.id]; // Remove the player from the players object
+
     // Notify other players that this player has left
     io.emit("playerLeft", socket.id);
   });

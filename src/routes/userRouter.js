@@ -2,7 +2,8 @@ const express = require("express");
 const userModel = require("../models/userModel");
 const router = express.Router();
 
-router.post("/register", async (req, res) => {
+// Login
+router.post("/login", async (req, res) => {
   try {
     const { name, color, img } = req.body;
 
@@ -13,18 +14,23 @@ router.post("/register", async (req, res) => {
       });
     }
 
-    const newUser = await userModel({ name, color, img });
-    newUser.save()
+    let user = await userModel.findOne({ name });
 
-    res.status(201).json({
-        message: "account successfully registered!",
-        status: 201,
-        data: newUser
-    })
+    if (!user) {
+      // Agar user topilmasa, yangi user ochiladi
+      user = new userModel({ name, color, img });
+      await user.save();
+    }
+
+    res.status(200).json({
+      message: "Login successful!",
+      status: 200,
+      data: user,
+    });
   } catch (e) {
-    console.log("Server error");
+    console.log("Server error:", e.message);
     res.status(500).json("SERVER ERROR");
   }
 });
 
-module.exports = router
+module.exports = router;

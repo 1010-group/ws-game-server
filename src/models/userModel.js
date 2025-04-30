@@ -16,5 +16,9 @@ const userSchema = mongoose.Schema({
     required: false,
     default: "#000",
   },
+  password: {
+    type: String,
+    required: true,
+  }
 });
 module.exports = mongoose.model("wsgameuser", userSchema);
